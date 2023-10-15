@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personal Budget</title>
+    <!-- Meta description for SEO -->
+    <meta
+      name="description"
+      content="Manage your personal budget with our free app. Track your expenses, set alerts, and stay on budget."
+    />
+    <link rel="stylesheet" href="/reset.css" />
+    <style>
+      /* Global styles */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+
+      a {
+        text-decoration: none;
+        color: #007bff;
+      }
+
+      a:hover {
+        text-decoration: underline;
+        font-weight: bold;
+        color: white;
+      }
+
+      /* Header styles */
+      nav {
+        background-color: #333;
+        color: #fff;
+        padding: 10px;
+      }
+
+      nav ul {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      nav ul li {
+        display: inline;
+        margin-right: 20px;
+      }
+
+      /* Hero section styles */
+      .hero {
+        text-align: center;
+        background-color: #007bff;
+        color: #fff;
+        padding: 60px 0;
+      }
+
+      /* Main content styles */
+      .container {
+        padding: 20px;
+      }
+
+      .text-box {
+        margin-bottom: 20px;
+      }
+
+      .chart {
+        margin: 10px;
+        width: 500px;
+        height: 500px;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      p {
+        font-size: 16px;
+      }
+
+      /* Footer styles */
+      footer {
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 10px 0;
+      }
+    </style>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.0/axios.min.js"
+      integrity="sha512-aoTNnqZcT8B4AmeCFmiSnDlc4Nj/KPaZyB5G7JnOnUEkdNpCZs1LCankiYi01sLTyWy+m2P+W4XM+BuQ3Q4/Dg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+  </head>
+  <body>
+    <!-- Skip link to the main content -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!--  ARIA landmarks for accessibility -->
+    <nav role="navigation">
+      <ul>
+        <li><a href="/">Homepage</a></li>
+        <li><a href="/about.html">About</a></li>
+        <li><a href="/login.html">Login</a></li>
+        <li><a href="https://google.com">Google</a></li>
+      </ul>
+    </nav>
+
+    <!-- ARIA landmark for the main content -->
+    <main role="main" id="main-content">
+      <!-- Section for the hero section -->
+      <section class="hero">
+        <h1>Personal Budget</h1>
+        <h2>A personal-budget management app</h2>
+      </section>
+
+      <!-- Section for the main content container -->
+      <section class="container center">
+        <div class="page-area">
+          <!-- Section for each text-box -->
+          <section class="text-box">
+            <h1>Stay on track</h1>
+            <p>
+              Do you know where you are spending your money? If you really stop
+              to track it down, you would get surprised! Proper budget
+              management depends on real data... and this app will help you with
+              that!
+            </p>
+          </section>
+        </div>
+      </section>
+      <h1>Chart</h1>
+      <div class="chart center">
+        <canvas id="myChart2"></canvas>
+        <div id="svg"></div>
+        <div id="chart-container"></div>
+      </div>
+    </main>
+
+    <!-- ARIA landmark for the footer -->
+    <footer role="contentinfo" class="bottom">
+      <div class="center">All rights reserved &copy; Fabio Nolasco</div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+      let dataSource = {
+        datasets: [
+          {
+            data: [30, 350, 90],
+          },
+        ],
+        labels: ['Eat Out', 'Rent', 'Groceries'],
+      };
+
+      function createChart2() {
+        const ctx = document.getElementById('myChart2');
+
+        new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: dataSource.labels,
+            datasets: dataSource.datasets,
+          },
+        });
+      }
+
+      function getBudget() {
+        axios.get('/get-budget').then(function (response) {
+          console.log(response.data);
+          for (let i = 0; i < response.data.myBudget.length; i++) {
+            dataSource.datasets[0].data[i] = response.data.myBudget[i].budget;
+            dataSource.labels[i] = response.data.myBudget[i].title;
+          }
+          createChart2();
+        });
+      }
+
+      getBudget();
+    </script>
+
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    >
+    <script>
+      axios
+        .get('/get-budget')
+        .then((response) => {
+          // Extract the myBudget array from the response data
+          const budgetData = response.data.myBudget;
+
+          // Set up dimensions
+          const width = 400;
+          const height = 400;
+          const radius = Math.min(width, height) / 2;
+
+          // Create an SVG element within the chart-container
+          const svg = d3
+            .select('#chart-container')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height);
+
+          // Create a group (g) for the pie chart
+          const pieGroup = svg
+            .append('g')
+            .attr('transform', `translate(${width / 2}, ${height / 2})`);
+
+          // Define the pie layout
+          const pie = d3.pie().value((d) => d.budget);
+
+          // Define the arc generator
+          const arc = d3.arc().innerRadius(0).outerRadius(radius);
+
+          // Create the pie slices (arcs)
+          const arcs = pieGroup
+            .selectAll('.arc')
+            .data(pie(budgetData))
+            .enter()
+            .append('g')
+            .attr('class', 'arc');
+
+          // Add the pie slice paths
+          arcs
+            .append('path')
+            .attr('d', arc)
+            .attr('fill', (d, i) => d3.schemeCategory10[i]); // Color scheme for the slices
+
+          // Add labels to the pie slices
+          arcs
+            .append('text')
+            .attr('transform', (d) => `translate(${arc.centroid(d)})`)
+            .attr('text-anchor', 'middle')
+            .text((d) => d.data.title);
+        })
+        .catch((error) => console.error(error));
+    </script>
+  </body>
+</html>
